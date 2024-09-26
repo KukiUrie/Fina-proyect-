@@ -96,7 +96,7 @@ root = Tk()
 root.title("Proyect")
 root.geometry('+%d+%d' % (10, 6))
 
-set_background_image(root,'D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\greenhouse-gas-emissions.jpg.optimal.jpg')
+set_background_image(root,'C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\greenhouse-gas-emissions.jpg.optimal.jpg')
 
 root.grid_rowconfigure(0, weight=1)
 root.grid_rowconfigure(1, weight=1)
@@ -160,11 +160,12 @@ status_label.grid(column=1, row=2, padx=10, pady=10)
 
 status_label2 = tk.Label(root, text="ACA VA ALGO MAS CON RELACION AL BOTON DE PROCESO")
 status_label2.grid(column=1, row=3, padx=10, pady=10)
-read_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 2, 0, lambda: read_csv_file_btn(), 150, 80)
-process_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 3, 0, lambda: exit_application(), 150, 80)
-download_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 4, 0, lambda: exit_application(), 150, 80)
-exit_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 4, 1, lambda: exit_application(), 150, 80)
+read_btn = display_icon(resource_path('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Subir Dataset1.png'), 2, 0, lambda: read_csv_file_btn(), 150, 80)
+process_btn = display_icon(resource_path('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Procesamiento de datos.png'), 3, 0, lambda: exit_application(), 150, 80)
+download_btn = display_icon(resource_path('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Descargar informe.png'), 4, 0, lambda: exit_application(), 150, 80)
+exit_btn = display_icon(resource_path('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Salida.png'), 4, 1, lambda: exit_application(), 150, 80)
 text1 = display_textbox1("From smog hanging over cities to smoke inside the home, air pollution poses a major threat to health across the globe.  Almost all of the global population (99%) are exposed to air pollution levels that put them at increased risk for diseases including heart disease, stroke, chronic obstructive pulmonary disease, cancer and pneumonia.  WHO monitors the exposure  levels and health impacts (i.e. deaths, DALYs) of air pollution at the national, regional and global level from ambient (outdoor) and household air pollution. Such estimates are used for official reporting like the world health statistics, and the Sustainable Development Goals.", 2, 4, root)
+
 
 
 root.mainloop()
