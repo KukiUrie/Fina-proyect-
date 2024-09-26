@@ -13,7 +13,7 @@ from sklearn.model_selection import learning_curve
 
 seed=42
 
-df1=pd.read_csv('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Agrofood_co2_emission.csv',header=None)
+df1=pd.read_csv('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Agrofood_co2_emission.csv',header=None)
 df1.head().style.set_properties(**{'background-color': 'white',
                            'color': 'black',
                            'border-color': 'black'})
@@ -81,8 +81,7 @@ for j in range(i + 1, len(axes)):
 
 plt.tight_layout()
 plt.show()
-
-
+################################################
 sns.set_style("white")
 fig, ax = plt.subplots(figsize=(16, 8))
 sns.lineplot(data=df_src, x='Year', y='total_emission', ax=ax)
@@ -93,8 +92,37 @@ plt.grid()
 # Guardar el gráfico como imagen
 plt.savefig('grafico_emisiones.png')  # Guarda el gráfico como 'grafico_emisiones.png'
 plt.close()  # Cerrar la figura para liberar memoria
+###########################################
+
+sns.set_style("darkgrid")
+fig, ax = plt.subplots(figsize=(16, 8))
+if 'Average_Temperature' in df_src.columns:
+    sns.lineplot(data=df_src, x='Year', y='Average_Temperature', ax=ax) 
+    fig.suptitle('Temperatura medio a lo largo del tiempo')
+else:
+    print("La columna 'Average_Temperature' no existe en el DataFrame.")
+
+image_path = 'grafico_temperatura.png'
+plt.savefig(image_path)  
+plt.close()
+
+#####################################################
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Year', y='Food_Household_Consumption', data=df_src)
+plt.title('Consumo de alimentos por hogar a lo largo de los años')
+plt.xticks(rotation=45)  # Rotar las etiquetas del eje X para acomodarlas mejor
+plt.tight_layout()  # Asegurar que todo se vea bien ajustado
+
+image_path = 'grafico_alimentos.png'
+plt.savefig(image_path)  # Guardar la imagen primero
+plt.show()  # Mostrar después de guardarla
+plt.close()  # Luego cerrar la figura
 
 
+
+
+
+####################################################
 y = df_src.pop('total_emission')
 y = pd.DataFrame(y, columns = ['total_emission'])
 df = pd.concat([df_src, y], axis=1)
