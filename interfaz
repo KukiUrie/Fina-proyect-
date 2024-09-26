@@ -1,0 +1,170 @@
+import tkinter as tk
+from tkinter import *
+from tkinter import messagebox
+from tkinter import Label
+from PIL import Image, ImageTk
+import os
+import sys
+from tkinter import filedialog
+import matplotlib.pyplot as plt
+import shutil
+import pandas as pd
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+all_contet = []
+all_images = []
+img_idx = [0]
+displayed_img = []
+temp_results_dir = None
+ppd_images = []
+temp_csv_path = None
+loop = None
+global_df = None
+
+#place an image as the grid
+def display_logo(url, row, column, num):
+    img = Image.open(resource_path(url))
+    img = img.resize((int(img.size[0]/num), int(img.size[1]/num)))
+    img = ImageTk.PhotoImage(img)
+    logo_label = Label(image=img, bg="")
+    logo_label.image = img
+    if num > 2.5:
+        logo_label.grid(column=column, row = row)
+    else:
+        logo_label.grid(column=column, row=row)
+    return logo_label
+
+def display_icon(url, row, column, funct, Width, Height):
+    icon = Image.open(resource_path(url))
+    icon = icon.resize((Width, Height))
+    icon = ImageTk.PhotoImage(icon)
+    icon_label = Button(image=icon, command=funct, width=Width, height=Height, border="0")
+    icon_label.image = icon
+    icon_label.grid(column=column, row=row, padx=10, pady=10)
+    return icon_label
+
+def display_textbox1(content, ro, col, root):
+    text_box = Text(root, height=20, width=20, padx=10, pady=10)
+    text_box.insert(1.0, content)
+    text_box.tag_configure("center", justify="center")
+    text_box.tag_add("center", 1.0, "end")
+    text_box.grid(column=col, row=ro, columnspan=1, rowspan=3, sticky="w", padx=10, pady=10)
+
+def display_textbox(content, ro, col, root):
+    text_box = Text(root, height=20, width=20, padx=10, pady=10)
+    text_box.insert(1.0, content)
+    text_box.tag_configure("center", justify="center")
+    text_box.tag_add("center", 1.0, "end")
+    text_box.grid(column=col, row=ro, sticky="nsew", padx=10, pady=10)
+
+def display_label_for_tittle(content, ro, col, root):
+   label = Label(root, text=content, font=("Arial", 24), bg=root.cget("bg"))  # bg=root.cget("bg") establece el fondo al color del root
+   label.grid(row=ro, column=col)
+
+def set_background_image(root, url):
+    # Inicializamos la imagen
+    bg_image = Image.open(resource_path(url))
+    
+    # Ajustamos la imagen al tamaño de la ventana
+    bg_photo = ImageTk.PhotoImage(bg_image)
+    
+    # Creamos el Label con la imagen de fondo
+    bg_label = tk.Label(root, image=bg_photo)
+    bg_label.image = bg_photo
+    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+    
+    # Actualizar la imagen si cambia el tamaño de la ventana
+    def resize_image(event):
+        # Redimensionamos la imagen para que cubra el área de la ventana
+        new_bg_image = bg_image.resize((event.width, event.height), Image.LANCZOS)
+        new_bg_photo = ImageTk.PhotoImage(new_bg_image)
+        bg_label.config(image=new_bg_photo)
+        bg_label.image = new_bg_photo
+    
+    # Vincular el evento de redimensionamiento
+    root.bind("<Configure>", resize_image)
+
+
+
+root = Tk()
+root.title("Proyect")
+root.geometry('+%d+%d' % (10, 6))
+
+set_background_image(root,'D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\greenhouse-gas-emissions.jpg.optimal.jpg')
+
+root.grid_rowconfigure(0, weight=1)
+root.grid_rowconfigure(1, weight=1)
+root.grid_rowconfigure(2, weight=1)
+root.grid_rowconfigure(3, weight=1)
+root.grid_rowconfigure(4, weight=1)
+root.grid_columnconfigure(0, weight=1)
+root.grid_columnconfigure(1, weight=1)
+root.grid_columnconfigure(2, weight=1)
+
+#header = Frame(root, width=150, height=150, bg="lightblue")
+#header.grid(columnspan=3, rowspan=2, row=0, sticky= "nsew")
+
+tittle = display_label_for_tittle("Analysis of Co2 Emissions", 0, 1, root)
+
+#save_img = Frame(root, width=1300, height=20, bg="orange")
+#save_img.grid(columnspan=3, rowspan=1, row=2, sticky="nsew")
+
+#main_content = Frame(root, width=1300, height=600, bg="white")
+#main_content.grid(columnspan=4, rowspan=4, row=3, sticky="nsew")
+
+def cleanup_temp_dir():
+    temp_dir = "temp"  # Carpeta de archivos temporales, por ejemplo
+    if os.path.exists(temp_dir):
+        # Eliminar la carpeta y su contenido
+        shutil.rmtree(temp_dir)
+        print(f"Directorio temporal '{temp_dir}' eliminado.")
+    else:
+        print(f"No se encontró el directorio '{temp_dir}'.")
+
+def read_csv_file_btn():
+    global global_df  # Usamos la variable global para guardar el DataFrame
+
+    # Abrir cuadro de diálogo para seleccionar el archivo CSV
+    file_path = filedialog.askopenfilename(
+        title="Selecct an CSV file",
+        filetypes=[("CSV files", "*.csv")]
+    )
+    
+    if file_path:  # Si se selecciona un archivo
+        try:
+            global_df = pd.read_csv(file_path)  # Leer el CSV y almacenarlo en global_df
+            messagebox.showinfo("Information", "File upload successfully")
+        except Exception as e:
+            messagebox.showerror("Error upload the file", str(e))
+    else:
+        messagebox.showwarning("No file selected", "Please, selecct an CSV file.")
+    if global_df is None:
+        status_label.config(text="No CSV file upload", fg="red")
+    else:
+        status_label.config(text="CSV file upload", fg="green")
+
+
+def exit_application():
+    root.after(0, cleanup_temp_dir)
+    root.quit()
+    root.destroy()
+
+status_label = tk.Label(root, text="Import a CSV file")
+status_label.grid(column=1, row=2, padx=10, pady=10)
+
+status_label2 = tk.Label(root, text="ACA VA ALGO MAS CON RELACION AL BOTON DE PROCESO")
+status_label2.grid(column=1, row=3, padx=10, pady=10)
+read_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 2, 0, lambda: read_csv_file_btn(), 150, 80)
+process_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 3, 0, lambda: exit_application(), 150, 80)
+download_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 4, 0, lambda: exit_application(), 150, 80)
+exit_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\png-transparent-the-button-button-icon-web-pages-theme-button-design-symbol-website-thumbnail.png'), 4, 1, lambda: exit_application(), 150, 80)
+text1 = display_textbox1("From smog hanging over cities to smoke inside the home, air pollution poses a major threat to health across the globe.  Almost all of the global population (99%) are exposed to air pollution levels that put them at increased risk for diseases including heart disease, stroke, chronic obstructive pulmonary disease, cancer and pneumonia.  WHO monitors the exposure  levels and health impacts (i.e. deaths, DALYs) of air pollution at the national, regional and global level from ambient (outdoor) and household air pollution. Such estimates are used for official reporting like the world health statistics, and the Sustainable Development Goals.", 2, 4, root)
+
+
+root.mainloop()
