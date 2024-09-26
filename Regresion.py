@@ -82,9 +82,17 @@ for j in range(i + 1, len(axes)):
 plt.tight_layout()
 plt.show()
 
+
 sns.set_style("white")
 fig, ax = plt.subplots(figsize=(16, 8))
 sns.lineplot(data=df_src, x='Year', y='total_emission', ax=ax)
+plt.title('Emisiones Totales por Año')
+plt.xlabel('Año')
+plt.ylabel('Emisiones Totales')
+plt.grid()
+# Guardar el gráfico como imagen
+plt.savefig('grafico_emisiones.png')  # Guarda el gráfico como 'grafico_emisiones.png'
+plt.close()  # Cerrar la figura para liberar memoria
 
 
 y = df_src.pop('total_emission')
