@@ -13,7 +13,7 @@ from sklearn.model_selection import learning_curve
 
 seed=42
 
-df1=pd.read_csv('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Agrofood_co2_emission.csv',header=None)
+df1=pd.read_csv('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Agrofood_co2_emission.csv',header=None)
 df1.head().style.set_properties(**{'background-color': 'white',
                            'color': 'black',
                            'border-color': 'black'})
@@ -79,7 +79,6 @@ plt.tight_layout()
 
 image_path = 'grafico_alimentos.png'
 plt.savefig(image_path) 
-plt.show() 
 plt.close()
 
 
@@ -149,7 +148,7 @@ def prepare_and_predict_with_model(model, df, X_train, y_train):
         'total_emission': predictions 
     })
 
-    
+    #############################
     fig, ax = plt.subplots(figsize=(16, 8))
     sns.lineplot(data=results, x='Year', y='total_emission', ax=ax, marker='o', label='Predictions')
 
@@ -158,12 +157,16 @@ def prepare_and_predict_with_model(model, df, X_train, y_train):
     plt.xlabel('Year', fontsize=14)
     plt.ylabel('Predicted Total Emissions', fontsize=14)
 
+    image_path = 'grafico_prediccion.png'
+    plt.savefig(image_path) 
+    plt.close()
+
+
 
     plt.grid(True)
     plt.xticks(results['Year'])
     plt.legend()
-    plt.show()
-
+ #################################
     return results
 
 next_5_years_results = prepare_and_predict_with_model(model, df, X_train, y_train)
