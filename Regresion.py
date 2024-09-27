@@ -13,7 +13,7 @@ from sklearn.model_selection import learning_curve
 
 seed=42
 
-df1=pd.read_csv('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Agrofood_co2_emission.csv',header=None)
+df1=pd.read_csv('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Agrofood_co2_emission.csv',header=None)
 df1.head().style.set_properties(**{'background-color': 'white',
                            'color': 'black',
                            'border-color': 'black'})
@@ -45,59 +45,23 @@ df_src = df_src.iloc[:,1:]
 
 df_src.info()
 
-variable_salida = 'total_emission'
-caracteristicas = df_src.drop(columns=[variable_salida])
+df = df_src[['Urban_population', 'Onfarm_energy_use', 'IPPU', 'Manure_Management', 'Food_Processing', 'Average_Temperature', 'Year', 'Food_Household_Consumption', 'total_emission']]
 
-df_correlacion = pd.concat([caracteristicas, df_src[variable_salida]], axis=1)
-
-correlacion = df_correlacion.corr()
-correlacion_salida = correlacion[[variable_salida]].iloc[:-1, :]
-
-plt.figure(figsize=(8, 6))
-sns.heatmap(correlacion_salida, annot=True, cmap='cividis', vmin=-1, vmax=1)
-plt.title('Heatmap de Correlación entre total_emission y Características')
-plt.show()
-
-variable_salida = 'total_emission'
-variables_independientes = df_src.drop(columns=[variable_salida])
-
-
-n = len(variables_independientes.columns)
-ncols = 4  
-nrows = int(np.ceil(n / ncols))  
-
-fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(20, 5 * nrows))
-
-axes = axes.flatten()
-
-for i, variable in enumerate(variables_independientes.columns):
-    sns.scatterplot(x=df_src[variable], y=df_src[variable_salida], ax=axes[i])
-    axes[i].set_title(f'{variable} vs {variable_salida}')
-    axes[i].set_xlabel(variable)
-    axes[i].set_ylabel(variable_salida)
-
-for j in range(i + 1, len(axes)):
-    axes[j].axis('off')
-
-plt.tight_layout()
-plt.show()
-################################################
 sns.set_style("white")
 fig, ax = plt.subplots(figsize=(16, 8))
-sns.lineplot(data=df_src, x='Year', y='total_emission', ax=ax)
+sns.lineplot(data=df, x='Year', y='total_emission', ax=ax)
 plt.title('Emisiones Totales por Año')
 plt.xlabel('Año')
 plt.ylabel('Emisiones Totales')
 plt.grid()
-# Guardar el gráfico como imagen
-plt.savefig('grafico_emisiones.png')  # Guarda el gráfico como 'grafico_emisiones.png'
+plt.savefig('grafico_emisiones.png')  
 plt.close()  # Cerrar la figura para liberar memoria
 ###########################################
 
 sns.set_style("darkgrid")
 fig, ax = plt.subplots(figsize=(16, 8))
-if 'Average_Temperature' in df_src.columns:
-    sns.lineplot(data=df_src, x='Year', y='Average_Temperature', ax=ax) 
+if 'Average_Temperature' in df.columns:
+    sns.lineplot(data=df, x='Year', y='Average_Temperature', ax=ax) 
     fig.suptitle('Temperatura medio a lo largo del tiempo')
 else:
     print("La columna 'Average_Temperature' no existe en el DataFrame.")
@@ -108,24 +72,24 @@ plt.close()
 
 #####################################################
 plt.figure(figsize=(10, 6))
-sns.barplot(x='Year', y='Food_Household_Consumption', data=df_src)
+sns.barplot(x='Year', y='Food_Household_Consumption', data=df)
 plt.title('Consumo de alimentos por hogar a lo largo de los años')
-plt.xticks(rotation=45)  # Rotar las etiquetas del eje X para acomodarlas mejor
-plt.tight_layout()  # Asegurar que todo se vea bien ajustado
+plt.xticks(rotation=45)
+plt.tight_layout()
 
 image_path = 'grafico_alimentos.png'
-plt.savefig(image_path)  # Guardar la imagen primero
-plt.show()  # Mostrar después de guardarla
-plt.close()  # Luego cerrar la figura
+plt.savefig(image_path) 
+plt.show() 
+plt.close()
 
 
 
 
 
 ####################################################
-y = df_src.pop('total_emission')
+y = df.pop('total_emission')
 y = pd.DataFrame(y, columns = ['total_emission'])
-df = pd.concat([df_src, y], axis=1)
+df = pd.concat([df, y], axis=1)
 
 
 from sklearn.model_selection import train_test_split
@@ -144,73 +108,62 @@ y_test = val_df['total_emission']
 X_val = test_df.drop('total_emission', axis=1)
 y_val = test_df['total_emission']
 
-X_train.head()
-
 model = LinearRegression()
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-rmse = mean_squared_error(y_test, y_pred, squared=False)
-r2 = r2_score(y_test, y_pred)
-resultados = pd.DataFrame({
-    'Métrica': ['MSE', 'RMSE', 'R^2'],
-    'Valor': [mse, rmse, r2]
-})
 
-print("Coeficientes del modelo:")
-for name, coef in zip(X_train.columns, model.coef_):
-    print(f'{name}: {coef}')
-
-print("\nIntercepto del modelo:", model.intercept_)
-print("\nResultados de la regresión:")
-print(resultados)
 
 model = LinearRegression()
 model.fit(X_train, y_train)
 y_pred = model.predict(X_val)
-mse = mean_squared_error(y_val, y_pred)
-rmse = mean_squared_error(y_val, y_pred, squared=False)
-r2 = r2_score(y_val, y_pred)
-resultados = pd.DataFrame({
-    'Métrica': ['MSE', 'RMSE', 'R^2'],
-    'Valor': [mse, rmse, r2]
-})
-
-print("Coeficientes del modelo:")
-for name, coef in zip(X_train.columns, model.coef_):
-    print(f'{name}: {coef}')
-
-print("\nIntercepto del modelo:", model.intercept_)
-print("\nResultados de la regresión:")
-print(resultados)
 
 
-model = LinearRegression()
 
-train_sizes, train_scores, val_scores = learning_curve(
-    model, X_train, y_train,
-    train_sizes=np.linspace(0.1, 1.0, 10),
-    cv=5,  
-    scoring='r2',  
-    n_jobs=-1  
-)
+def prepare_and_predict_with_model(model, df, X_train, y_train):
+    global_df = df.copy()
+    last_year = global_df['Year'].max()
 
-train_mean = np.mean(train_scores, axis=1)
-val_mean = np.mean(val_scores, axis=1)
-train_std = np.std(train_scores, axis=1)
-val_std = np.std(val_scores, axis=1)
+    
+    global_df = global_df[['Urban_population', 'Onfarm_energy_use', 'IPPU', 'Manure_Management', 'Food_Processing', 'Average_Temperature', 'Year', 'Food_Household_Consumption', 'total_emission']]
+    global_df = global_df.drop(columns=['total_emission'], errors='ignore')
 
-plt.figure(figsize=(10, 6))
-plt.plot(train_sizes, train_mean, label='Puntuación de Entrenamiento', color='blue')
-plt.plot(train_sizes, val_mean, label='Puntuación de Validación', color='green')
+    
+    new_years = pd.DataFrame({'Year': np.arange(last_year + 1, last_year + 6)})
+    extended_df = pd.concat([global_df, new_years], ignore_index=True)
 
 
-plt.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, color='blue', alpha=0.2)
-plt.fill_between(train_sizes, val_mean - val_std, val_mean + val_std, color='green', alpha=0.2)
+    if not hasattr(model, "coef_"):
+        model.fit(X_train, y_train)
+    for col in X_train.columns:
+        if col != 'Year' and col in extended_df.columns:
+            extended_df[col].fillna(extended_df[col].mean(), inplace=True)
 
-plt.title('Curva de Aprendizaje')
-plt.xlabel('Tamaño del Conjunto de Entrenamiento')
-plt.ylabel('Puntuación R^2')
-plt.legend()
-plt.grid()
-plt.show()
+
+    new_years_df = extended_df[extended_df['Year'] > last_year]
+
+    predictions = model.predict(new_years_df[X_train.columns])
+
+ 
+    results = pd.DataFrame({
+        'Year': new_years_df['Year'],
+        'total_emission': predictions 
+    })
+
+    
+    fig, ax = plt.subplots(figsize=(16, 8))
+    sns.lineplot(data=results, x='Year', y='total_emission', ax=ax, marker='o', label='Predictions')
+
+
+    plt.title('Predicted Total Emissions for the Next 5 Years', fontsize=16)
+    plt.xlabel('Year', fontsize=14)
+    plt.ylabel('Predicted Total Emissions', fontsize=14)
+
+
+    plt.grid(True)
+    plt.xticks(results['Year'])
+    plt.legend()
+    plt.show()
+
+    return results
+
+next_5_years_results = prepare_and_predict_with_model(model, df, X_train, y_train)
