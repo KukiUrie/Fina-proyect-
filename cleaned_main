@@ -17,14 +17,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
-
-
 img_idx = [0]
 loop = None
 global_df = None
@@ -38,11 +30,8 @@ df1.head().style.set_properties(**{'background-color': 'white',
                             'border-color': 'black'})
 
 df_src=pd.read_csv(os.path.join('Agrofood_co2_emission.csv'))
-df_src.info()
 df_src['Area'].unique()
 df_src['Area'].value_counts()
-df_src.isnull().sum()
-df_src.describe()
 df_src["Savanna fires"].fillna(df_src["Savanna fires"].mean(), inplace = True)
 df_src["Forest fires"].fillna(df_src["Forest fires"].mean(), inplace = True)
 df_src["Crop Residues"].fillna(df_src["Crop Residues"].mean(), inplace = True)
@@ -120,26 +109,18 @@ model = LinearRegression()
 model.fit(X_train, y_train)
 y_pred = model.predict(X_val)
 
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 def prepare_and_predict_with_model(model, X_train, y_train):
     global global_df
-    dft = global_df 
-    print("Columnas disponibles en dft:", dft.columns.tolist())
 
-    dft.columns = dft.columns.str.replace(' ', '_')
-    dft.columns = dft.columns.str.replace('-', '')
-    dft.columns = dft.columns.str.replace(r'_\(CO2\)', '', regex=True)
-    dft.columns = dft.columns.str.replace(r'_°C', '', regex=True)
-
-    dft["Food_Household_Consumption"].fillna(dft["Food_Household_Consumption"].mean(), inplace=True)
-    dft["IPPU"].fillna(dft["IPPU"].mean(), inplace=True)
-    dft["Manure_Management"].fillna(dft["Manure_Management"].mean(), inplace=True)
-    dft["Onfarm_energy_use"].fillna(dft["Onfarm_energy_use"].mean(), inplace=True)
-
-    dft = dft.drop(columns=['total_emission'], errors='ignore')
-
-    if 'Year' not in dft.columns:
-            print("La columna 'Year' no se encuentra en dft. Columnas disponibles:", dft.columns.tolist())
-            return None 
+    dft = global_df
 
     last_year = dft['Year'].max()
 
@@ -205,9 +186,13 @@ def display_textbox(content, ro, col, root):
     text_box.tag_add("center", 1.0, "end")
     text_box.grid(column=col, row=ro, sticky="nsew", padx=10, pady=10)
 
-def display_label_for_tittle(content, ro, col, root):
-   label = Label(root, text=content, font=("Arial", 24), bg=root.cget("bg"))  # bg=root.cget("bg") establece el fondo al color del root
-   label.grid(row=ro, column=col)
+def display_images(img_path, ro, col, width, height):
+    img = Image.open(resource_path(img_path))
+    img = img.resize((width, height))
+    img = ImageTk.PhotoImage(img)
+    img_label = Label(image=img) 
+    img_label.image = img 
+    img_label.grid(row=ro, column=col, padx=10, pady=10)
 
 def set_background_image(root, url):
     bg_image = Image.open(resource_path(url))
@@ -325,6 +310,67 @@ Las empresas y los inversores juegan un papel crucial en esta transición. Deben
 
     pdf.output('hoja.pdf', 'F')
 
+def cleanup_temp_dir():
+    temp_dir = "temp"
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+        print(f"Directorio temporal '{temp_dir}' eliminado.")
+    else:
+        print(f"No se encontró el directorio '{temp_dir}'.")
+
+def read_csv_file_btn():
+    global global_df
+    file_path = filedialog.askopenfilename(
+        title="Select a CSV file",
+        filetypes=[("CSV files", "*.csv")]
+    )
+
+    if file_path:
+        try:
+            global_df = pd.read_csv(file_path)
+            messagebox.showinfo("Information", "File uploaded successfully")
+            dft = global_df.copy()
+            dft.columns = dft.columns.str.replace(' ', '_')
+            dft.columns = dft.columns.str.replace('-', '')
+            dft.columns = dft.columns.str.replace(r'_\(CO2\)', '', regex=True)
+            dft.columns = dft.columns.str.replace(r'_°C', '', regex=True)
+            required_columns = ['Year', 'Food_Household_Consumption', 'IPPU', 'Manure_Management', 'Onfarm_energy_use']
+            missing_columns = [col for col in required_columns if col not in dft.columns]
+
+            if missing_columns:
+                messagebox.showerror("Error", f"Missing required columns: {', '.join(missing_columns)}")
+                return None  
+            dft["Food_Household_Consumption"].fillna(dft["Food_Household_Consumption"].mean(), inplace=True)
+            dft["IPPU"].fillna(dft["IPPU"].mean(), inplace=True)
+            dft["Manure_Management"].fillna(dft["Manure_Management"].mean(), inplace=True)
+            dft["Onfarm_energy_use"].fillna(dft["Onfarm_energy_use"].mean(), inplace=True)
+
+            dft = dft.drop(columns=['total_emission'], errors='ignore')
+            if 'Year' not in dft.columns:
+                messagebox.showerror("Error", "Missing 'Year' column.")
+                return None
+
+        
+            global_df = dft
+            status_label.config(text="CSV file uploaded", fg="green")
+
+        except Exception as e:
+            messagebox.showerror("Error uploading the file", f"Missing: {str(e)}")
+            return None
+    else:
+        messagebox.showwarning("No file selected", "Please, select a CSV file.")
+        return None
+
+    if global_df is None:
+        status_label.config(text="No CSV file uploaded", fg="red")
+    else:
+        status_label.config(text="CSV file uploaded", fg="green")
+
+def exit_application():
+    root.after(0, cleanup_temp_dir)
+    root.quit()
+    root.destroy()
+
 
 root = Tk()
 root.title("Proyect")
@@ -341,46 +387,13 @@ root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
 
-tittle = display_label_for_tittle("Analysis of Co2 Emissions", 0, 1, root)
-def cleanup_temp_dir():
-    temp_dir = "temp"
-    if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)
-        print(f"Directorio temporal '{temp_dir}' eliminado.")
-    else:
-        print(f"No se encontró el directorio '{temp_dir}'.")
-
-def read_csv_file_btn():
-    global global_df
-    file_path = filedialog.askopenfilename(
-        title="Selecct an CSV file",
-        filetypes=[("CSV files", "*.csv")]
-    )
-    
-    if file_path:
-        try:
-            global_df = pd.read_csv(file_path)
-            messagebox.showinfo("Information", "File upload successfully")
-        except Exception as e:
-            messagebox.showerror("Error upload the file", str(e))
-    else:
-        messagebox.showwarning("No file selected", "Please, selecct an CSV file.")
-    if global_df is None:
-        status_label.config(text="No CSV file upload", fg="red")
-    else:
-        status_label.config(text="CSV file upload", fg="green")
-
-
-def exit_application():
-    root.after(0, cleanup_temp_dir)
-    root.quit()
-    root.destroy()
-
 status_label = tk.Label(root, text="Import a CSV file")
 status_label.grid(column=1, row=2, padx=10, pady=10)
 read_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Subir Dataset1.png'), 2, 0, lambda: read_csv_file_btn(), 150, 80)
 process_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Procesamiento de datos.png'), 3, 0, lambda: prepare_and_predict_with_model(model, X_train, y_train), 150, 80)
 download_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Descargar informe.png'), 4, 0, lambda: generar_pdf(), 150, 80)
 exit_btn = display_icon(resource_path('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Salida.png'), 4, 1, lambda: exit_application(), 150, 80)
-text1 = display_textbox1("From smog hanging over cities to smoke inside the home, air pollution poses a major threat to health across the globe.  Almost all of the global population (99%) are exposed to air pollution levels that put them at increased risk for diseases including heart disease, stroke, chronic obstructive pulmonary disease, cancer and pneumonia.  WHO monitors the exposure  levels and health impacts (i.e. deaths, DALYs) of air pollution at the national, regional and global level from ambient (outdoor) and household air pollution. Such estimates are used for official reporting like the world health statistics, and the Sustainable Development Goals.", 2, 4, root)
+text1 = display_textbox1("Instructions: 1. The dataset should have the following columns: [Urban_population] [Onfarm_energy_use] [IPPU] [Manure_Management] [Food_Processing] [Average_Temperature] [Year] [Food_Household_Consumption] [total_emission]. 2. The report that is generated in pdf, is saved in the source folder.", 2, 4, root)
+tittle = display_images(resource_path("D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\logo_titulo.png"), 0, 1, 400, 200)
+
 root.mainloop()
