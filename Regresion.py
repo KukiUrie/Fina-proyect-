@@ -10,13 +10,15 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import learning_curve
+import pickle
+
 
 seed=42
 
-df1=pd.read_csv('C:\\Users\Daniel\Documents\APRENDIZAJE AUTOMATICO\V2\Agrofood_co2_emission.csv',header=None)
+df1=pd.read_csv('D:\\Docs_Sacave\\Desktop\\Semestre\\archive (4)\\Agrofood_co2_emission.csv',header=None)
 df1.head().style.set_properties(**{'background-color': 'white',
-                           'color': 'black',
-                           'border-color': 'black'})
+                            'color': 'black',
+                            'border-color': 'black'})
 
 df_src=pd.read_csv(os.path.join('Agrofood_co2_emission.csv'))
 df_src.info()
@@ -56,7 +58,7 @@ plt.ylabel('Emisiones Totales')
 plt.grid()
 plt.savefig('grafico_emisiones.png')  
 plt.close()  # Cerrar la figura para liberar memoria
-###########################################
+    ###########################################
 
 sns.set_style("darkgrid")
 fig, ax = plt.subplots(figsize=(16, 8))
@@ -70,7 +72,7 @@ image_path = 'grafico_temperatura.png'
 plt.savefig(image_path)  
 plt.close()
 
-#####################################################
+    #####################################################
 plt.figure(figsize=(10, 6))
 sns.barplot(x='Year', y='Food_Household_Consumption', data=df)
 plt.title('Consumo de alimentos por hogar a lo largo de los años')
@@ -79,19 +81,23 @@ plt.tight_layout()
 
 image_path = 'grafico_alimentos.png'
 plt.savefig(image_path) 
+plt.show() 
 plt.close()
 
 
 
 
 
-####################################################
+    ####################################################
 y = df.pop('total_emission')
 y = pd.DataFrame(y, columns = ['total_emission'])
 df = pd.concat([df, y], axis=1)
 
 
 from sklearn.model_selection import train_test_split
+
+global X_train, y_train, global_df
+
 train_df, temp_df = train_test_split(df, test_size=0.3, random_state=42)
 val_df, test_df = train_test_split(temp_df, test_size=0.5, random_state=42)
 print(f'Tamaño de entrenamiento: {len(train_df)}')
@@ -116,57 +122,64 @@ model = LinearRegression()
 model.fit(X_train, y_train)
 y_pred = model.predict(X_val)
 
+global_df = df_src
 
+def prepare_and_predict_with_model(model, X_train, y_train):
+    global global_df
+    dft = global_df.copy()  # Copiar para no modificar el DataFrame global directamente
 
-def prepare_and_predict_with_model(model, df, X_train, y_train):
-    global_df = df.copy()
-    last_year = global_df['Year'].max()
+        # Verificar los nombres de las columnas
+    print("Columnas disponibles en dft:", dft.columns.tolist())
 
-    
-    global_df = global_df[['Urban_population', 'Onfarm_energy_use', 'IPPU', 'Manure_Management', 'Food_Processing', 'Average_Temperature', 'Year', 'Food_Household_Consumption', 'total_emission']]
-    global_df = global_df.drop(columns=['total_emission'], errors='ignore')
+    dft.columns = dft.columns.str.replace(' ', '_')
+    dft.columns = dft.columns.str.replace('-', '')
 
-    
+        # Rellenar valores nulos
+    dft["Food_Household_Consumption"].fillna(dft["Food_Household_Consumption"].mean(), inplace=True)
+    dft["IPPU"].fillna(dft["IPPU"].mean(), inplace=True)
+    dft["Manure_Management"].fillna(dft["Manure_Management"].mean(), inplace=True)
+    dft["Onfarm_energy_use"].fillna(dft["Onfarm_energy_use"].mean(), inplace=True)
+
+        # Eliminar la columna total_emission solo si existe
+    dft = dft.drop(columns=['total_emission'], errors='ignore')
+
+        # Verificar si la columna 'Year' está presente antes de intentar usarla
+    if 'Year' not in dft.columns:
+            print("La columna 'Year' no se encuentra en dft. Columnas disponibles:", dft.columns.tolist())
+            return None  # O puedes lanzar una excepción, si lo prefieres
+
+    last_year = dft['Year'].max()
+
     new_years = pd.DataFrame({'Year': np.arange(last_year + 1, last_year + 6)})
-    extended_df = pd.concat([global_df, new_years], ignore_index=True)
+    extended_df = pd.concat([dft, new_years], ignore_index=True)
 
-
+        # Comprobar si el modelo ya ha sido ajustado
     if not hasattr(model, "coef_"):
-        model.fit(X_train, y_train)
+            model.fit(X_train, y_train)
+
     for col in X_train.columns:
         if col != 'Year' and col in extended_df.columns:
             extended_df[col].fillna(extended_df[col].mean(), inplace=True)
 
-
     new_years_df = extended_df[extended_df['Year'] > last_year]
-
     predictions = model.predict(new_years_df[X_train.columns])
 
- 
     results = pd.DataFrame({
-        'Year': new_years_df['Year'],
-        'total_emission': predictions 
-    })
+        'Year': new_years_df['Year'],'total_emission': predictions 
+        })
 
-    #############################
     fig, ax = plt.subplots(figsize=(16, 8))
     sns.lineplot(data=results, x='Year', y='total_emission', ax=ax, marker='o', label='Predictions')
-
-
     plt.title('Predicted Total Emissions for the Next 5 Years', fontsize=16)
     plt.xlabel('Year', fontsize=14)
     plt.ylabel('Predicted Total Emissions', fontsize=14)
-
-    image_path = 'grafico_prediccion.png'
-    plt.savefig(image_path) 
-    plt.close()
-
-
-
     plt.grid(True)
     plt.xticks(results['Year'])
-    plt.legend()
- #################################
-    return results
+    plt.grid
+    plt.savefig('Regression 5 years')
 
-next_5_years_results = prepare_and_predict_with_model(model, df, X_train, y_train)
+    # Llamar a la función
+prepare_and_predict_with_model(model, X_train, y_train)
+
+with open('data.pkl', 'wb') as f:
+    pickle.dump((X_train, y_train), f)
